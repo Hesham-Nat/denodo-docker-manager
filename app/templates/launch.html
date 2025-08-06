@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <title>Launch Container</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-white text-gray-900">
+  {% include "partials/navbar.html" %}
+
+  <div class="flex-grow px-6 py-10 w-full">
+    <h1 class="text-3xl font-bold text-blue-900">Launch Container: <span class="text-gray-700">{{ tag }}</span></h1>
+
+    <form method="post" action="/launch" class="space-y-8">
+      <input type="hidden" name="tag" value="{{ tag }}" />
+      <input type="hidden" name="group" value="{{ group }}" />
+
+      <!-- Section: Basic Info -->
+      <div>
+        <h2 class="text-xl font-semibold mb-4 border-b pb-1">🧾 Container Basics</h2>
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label for="container_name" class="block font-medium mb-1">Container Name</label>
+            <input type="text" id="container_name" name="container_name" value="{{ container_name or '' }}" required
+                   class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label for="hostname" class="block font-medium mb-1">Hostname</label>
+            <input type="text" id="hostname" name="hostname" value="{{ hostname or default_hostname }}"
+                   class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Volumes & Ports -->
+      <div>
+        <h2 class="text-xl font-semibold mb-4 border-b pb-1">🗂️ Volumes & Ports</h2>
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label for="volumes" class="block font-medium mb-1">Volumes (host_path:container_path)</label>
+            <textarea id="volumes" name="volumes" rows="4"
+                      class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{% for volume in default_volumes %}{{ volume }}
+{% endfor %}</textarea>
+          </div>
+          <div>
+            <label for="ports" class="block font-medium mb-1">Ports (host_port:container_port)</label>
+            <textarea id="ports" name="ports" rows="4"
+                      class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{% for port in default_ports %}{{ port }}
+{% endfor %}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Environment Variables -->
+      <div>
+        <h2 class="text-xl font-semibold mb-4 border-b pb-1">⚙️ Advanced</h2>
+        <button type="button" id="toggle-env"
+                class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition mb-3 focus:outline-none"
+                aria-expanded="false" aria-controls="env-vars">
+          Show Environment Variables
+        </button>
+
+        <div id="env-vars" class="hidden transition-all duration-300 ease-in-out">
+          <label for="env_vars" class="block font-medium mb-1">Environment Variables (KEY=VALUE)</label>
+          <textarea id="env_vars" name="env_vars" rows="5"
+                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{% for env in default_env %}{{ env }}
+{% endfor %}</textarea>
+        </div>
+
+        <div class="mt-6">
+          <label for="command" class="block font-medium mb-1">Command</label>
+          <input type="text" id="command" name="command"
+                 value="{{ command or default_command }}"
+                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+      </div>
+
+      <!-- Help Box -->
+      <div class="mt-6 p-4 border-l-4 border-blue-600 bg-blue-100 rounded shadow text-gray-800">
+        <p class="font-semibold mb-1">💡 Need help configuring the container?</p>
+        <p>
+          Check the
+          <a href="https://community.denodo.com/kb/en/view/document/Denodo%20Docker%20container%20configuration"
+             target="_blank"
+             class="font-semibold text-blue-800 underline hover:text-blue-900">
+            Denodo Docker Configuration Reference →
+          </a>
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-4">
+        <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700">🚀 Start Container</button>
+        <a href="/" class="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+   <!-- Spinner Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400 border-solid mb-6"></div>
+    <span id="loading-message" class="text-white text-lg font-semibold animate-pulse">Just a sec... 😊</span>
+  </div>
+    
+<script>
+  const loadingOverlay = document.getElementById("loading-overlay");
+  const loadingMsg = document.getElementById("loading-message");
+
+  const funnyMessages = [
+    "Waking up the containers...",
+    "Feeding the Docker daemon...",
+    "Pushing bytes through the tubes...",
+    "Assembling whales 🐳...",
+    "Downloading the Internet (almost)...",
+    "Negotiating with the GCR gods...",
+    "Compiling caffeine...",
+    "Whispering to Linux subsystems...",
+    "Placing pixels just right...",
+    "Summoning a smiley soon..."
+  ];
+
+  let intervalId;
+
+  // Show a random message every 1.6 seconds
+  function startFunnyMessages() {
+    intervalId = setInterval(() => {
+      const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+      loadingMsg.textContent = randomMsg;
+    }, 1600);
+  }
+
+  // End with a smiley
+  function showSmiley() {
+    clearInterval(intervalId);
+    loadingMsg.textContent = "Wait... 😀";
+  }
+
+  // Hook into all form submissions
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", () => {
+      loadingOverlay.classList.remove("hidden");
+      startFunnyMessages();
+      // Optional: end with smile after 6s if the page hasn’t redirected yet
+      setTimeout(showSmiley, 9000);
+    });
+  });
+</script>
+<script>
+
+  const toggleBtn = document.getElementById("toggle-env");
+  const envVars = document.getElementById("env-vars");
+  toggleBtn.addEventListener("click", () => {
+    envVars.classList.toggle("hidden");
+    toggleBtn.setAttribute("aria-expanded", !envVars.classList.contains("hidden"));
+  });
+
+  // Prevent spinner from staying visible after back/forward navigation
+  window.addEventListener("pageshow", function (event) {
+    // This ensures it runs even when bfcache is used
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("hidden");
+    }
+  });
+</script>
+    {% include "partials/footer.html" %}
+  
+</body>
+</html>

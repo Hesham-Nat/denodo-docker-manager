@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  superset:
+    container_name: denodo-dahsboard-superset
+    environment:
+      SUPERSET_SECRET_KEY: admin
+    ports:
+      - 8088:8088
+    image: harbor.open.denodo.com/denodo-connects-8.0/images/superset-denodo:latest
+    hostname: Natrophilite  

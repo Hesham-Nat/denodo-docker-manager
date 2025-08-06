@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>About Denodo Docker Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 leading-relaxed">
+  {% include "partials/navbar.html" %}
+  <div class="max-w-6xl mx-auto px-6 py-12">
+    <h1 class="text-4xl font-extrabold mb-6">📘 About Denodo Docker Manager</h1>
+
+```
+<p class="mb-4">Welcome to <strong>Denodo Docker Manager</strong>, a lightweight, powerful web application designed specifically for <strong>Denodo engineers, solution architects, and support teams</strong>. This platform simplifies and accelerates the way you spin up, manage, and experiment with Denodo Platform and database containers in a <strong>Docker-powered environment</strong>.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">🔍 What Is This App?</h2>
+<ul class="list-disc pl-6 mb-4">
+  <li>Launch any Denodo version (7.0, 8.0, 9.0) with pre-configured roles (VDP, Scheduler, SM, etc.)</li>
+  <li>Auto-start popular databases like PostgreSQL, MySQL, and SQL Server</li>
+  <li>Manage all containers—running or stopped—in a unified UI</li>
+  <li>Simulate customer environments for bug reproduction or compatibility testing</li>
+  <li>Eliminate manual docker run / docker-compose complexity</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">🚀 Who Is It For?</h2>
+<ul class="list-disc pl-6 mb-4">
+  <li><strong>Support Engineers</strong>: Reproduce bugs across multiple versions.</li>
+  <li><strong>QA & Automation Engineers</strong>: Use consistent, reproducible setups.</li>
+  <li><strong>Solution Architects</strong>: Demonstrate upgrade scenarios or mixed environments.</li>
+  <li><strong>Denodo Developers</strong>: Prototype modules or external database integrations.</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">🧠 Why Not Just Use Docker Desktop or Rancher?</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full text-sm text-left border border-gray-300">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="px-4 py-2">Feature</th>
+        <th class="px-4 py-2">Denodo Docker Manager</th>
+        <th class="px-4 py-2">Docker Desktop / Rancher</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-t">
+        <td class="px-4 py-2">Denodo-centric UI</td>
+        <td class="px-4 py-2">✅ Yes</td>
+        <td class="px-4 py-2">❌ No</td>
+      </tr>
+      <tr class="border-t">
+        <td class="px-4 py-2">Launch Denodo roles easily</td>
+        <td class="px-4 py-2">✅ Dropdowns + tags</td>
+        <td class="px-4 py-2">❌ Manual setup</td>
+      </tr>
+      <tr class="border-t">
+        <td class="px-4 py-2">Docker Compose simulation</td>
+        <td class="px-4 py-2">✅ Built-in</td>
+        <td class="px-4 py-2">❌ Not supported</td>
+      </tr>
+      <tr class="border-t">
+        <td class="px-4 py-2">Logs/terminal UI</td>
+        <td class="px-4 py-2">✅ One-click</td>
+        <td class="px-4 py-2">❌ CLI required</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">🧰 Features At a Glance</h2>
+<ul class="list-disc pl-6 mb-4">
+  <li>Database auto-start via <code>databases.yaml</code></li>
+  <li>Custom environment variable support for Kerberos, SSL, Auth</li>
+  <li>Import/export container configs</li>
+  <li>Real-time logs + terminal</li>
+  <li>Persistent volume paths for logs, drivers, config</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">🏁 Getting Started</h2>
+<p class="mb-2 font-semibold">Option A: Use <code>startup.bat</code></p>
+<pre class="bg-gray-900 text-white text-sm rounded p-4 overflow-auto mb-4">
+```
+
+@echo off
+python -m venv venv
+call venv\Scripts\activate
+pip install -r requirements.txt
+call fetch\_images.bat
+uvicorn app.main\:app --reload --port 5665 </pre> <p class="mb-2 font-semibold">Option B: Manual Run</p> <pre class="bg-gray-900 text-white text-sm rounded p-4 overflow-auto mb-4">
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main\:app --reload --port 5665 </pre>
+
+```
+<h2 class="text-2xl font-bold mt-10 mb-3">📂 Project Structure</h2>
+<pre class="bg-gray-800 text-white text-sm rounded p-4 overflow-auto mb-4">
+```
+
+├── app/
+│   ├── routers/
+│   ├── templates/
+│   ├── static/
+│   ├── utils/
+│   └── main.py
+├── databases.yaml
+├── requirements.txt
+├── startup.bat
+├── fetch\_images.bat </pre>
+
+```
+<h2 class="text-2xl font-bold mt-10 mb-3">🧬 Architecture Overview</h2>
+<pre class="bg-gray-800 text-white text-sm rounded p-4 overflow-auto mb-4">
+```
+
+Denodo Docker Manager
+└── FastAPI (Backend)
+└── Docker SDK (Python)
+└── Docker Engine (WSL/Linux)
+└── Denodo, MySQL, PG, Oracle, etc. </pre>
+
+```
+<h2 class="text-2xl font-bold mt-10 mb-3">🌐 Useful Endpoints</h2>
+<ul class="list-disc pl-6 mb-4">
+  <li><strong>Swagger UI:</strong> <a class="text-blue-600" href="/docs">/docs</a></li>
+  <li><strong>ReDoc:</strong> <a class="text-blue-600" href="/redoc">/redoc</a></li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">💡 Tips & Best Practices</h2>
+<ul class="list-disc pl-6 mb-4">
+  <li>Use <code>autostart: true</code> in <code>databases.yaml</code> to restart containers on app boot</li>
+  <li>Use terminal and log views to debug container boot issues</li>
+  <li>Mount JDBC drivers through volumes for custom support</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">🧪 Performance & Overhead</h2>
+<ul class="list-disc pl-6 mb-4">
+  <li>FastAPI async backend (~30MB memory)</li>
+  <li>Tailwind-based static frontend (no JS framework)</li>
+  <li>Startup under 1s (excluding image pulls)</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-3">💬 Feedback?</h2>
+<p class="mb-8">Reach out to the author or submit feedback in the internal GitHub project.</p>
+
+<p class="text-lg font-semibold text-center">Thank you for using Denodo Docker Manager 💙</p>
+<p class="text-center text-2xl">🐳</p>
+```
+
+  </div>
+</body>
+</html>

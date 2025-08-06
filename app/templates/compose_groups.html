@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <title>Docker Compose Groups</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-white text-gray-900">
+  {% include "partials/navbar.html" %}
+
+  <div class="flex-grow px-6 py-10 w-full">
+
+    <!-- 🔁 Tabs -->
+    <div class="flex space-x-4 mb-6">
+      <a href="/containers"
+        class="px-4 py-2 rounded font-semibold shadow
+                {% if request.url.path == '/containers' %}bg-blue-600 text-white{% else %}bg-white text-gray-800 border border-gray-300{% endif %}">
+        🚀 Standalone Containers
+      </a>
+      <a href="/containers/compose-groups"
+        class="px-4 py-2 rounded font-semibold shadow
+                {% if request.url.path == '/containers/compose-groups' %}bg-purple-600 text-white{% else %}bg-white text-gray-800 border border-gray-300{% endif %}">
+        📦 Docker Compose Groups
+      </a>
+      <a href="/containers/list-all"
+        class="px-4 py-2 rounded font-semibold shadow
+                {% if request.url.path == '/containers/list-all' %}bg-purple-600 text-white{% else %}bg-white text-gray-800 border border-gray-300{% endif %}">
+        📃 List All Containers
+      </a>
+    </div>
+
+    <!-- ✅ Flash Message -->
+    {% if request.query_params.get('success') %}
+      <div class="mb-4 px-6 py-3 bg-green-100 text-green-800 border border-green-300 rounded-lg shadow-md">
+        ✅ {{ request.query_params.get('success') }}
+      </div>
+    {% elif request.query_params.get('error') %}
+      <div class="mb-4 px-6 py-3 bg-red-100 text-red-800 border border-red-300 rounded-lg shadow-md">
+        ❌ {{ request.query_params.get('error') }}
+      </div>
+    {% endif %}
+
+    <!-- 🧠 Page Title -->
+    <h1 class="text-4xl font-extrabold mb-8 text-gray-800">📦 Docker Compose Groups</h1>
+
+    <!-- 📥 Import Compose -->
+    <div class="mb-10 bg-white border border-gray-300 p-6 rounded-2xl shadow-md">
+      <form action="/containers/import-compose" method="post" enctype="multipart/form-data" class="flex flex-wrap items-center gap-4 w-full">
+        <label class="font-semibold text-lg text-gray-700">📁 Import Compose File:</label>
+        <input type="text" name="group_name" placeholder="Group Name"
+               class="border border-gray-400 rounded px-3 py-2 w-48" required>
+        <input type="file" name="compose_file" accept=".yaml,.yml"
+               class="flex-1 border border-gray-400 rounded px-3 py-2 w-full max-w-xl
+                      file:mr-4 file:py-2 file:px-4 file:rounded file:border-0
+                      file:bg-purple-600 file:text-white hover:file:bg-purple-700" required>
+        <button type="submit"
+                class="px-6 py-2 bg-purple-600 text-white font-semibold rounded hover:bg-purple-700 shadow">
+          Upload
+        </button>
+      </form>
+    </div>
+
+    {% if groups %}
+      <div class="space-y-12">
+        {% for group in groups %}
+          <div class="bg-white border border-gray-300 rounded-2xl shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-2xl font-bold text-gray-800">🧱 {{ group.name }}</h2>
+              <div class="flex space-x-2">
+                <form method="post" action="/containers/compose-groups/{{ group.name }}/start">
+                  <button class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">▶ Start All</button>
+                </form>
+                <form method="post" action="/containers/compose-groups/{{ group.name }}/stop">
+                  <button class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">⏸ Stop All</button>
+                </form>
+                <form method="post" action="/containers/compose-groups/{{ group.name }}/delete" onsubmit="return confirm('Delete group {{ group.name }}?')">
+                  <button class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">🗑 Delete Group</button>
+                </form>
+                <form method="post" action="/containers/compose-groups/{{ group.name }}/rebuild">
+                  <button class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">🔄 Rebuild Group</button>
+                </form>
+              </div>
+            </div>
+
+            {% if group.containers %}
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for c in group.containers %}
+                  <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <h3 class="text-lg font-semibold mb-2">{{ c.Name }}</h3>
+                    
+                    <p><strong>Image:</strong> {{ c.Config.Image }}</p>
+                    <p><strong>Status:</strong>
+                      {% if c.State.Running %}
+                        <span class="text-green-600">🟢 Running</span>
+                      {% else %}
+                        <span class="text-red-600">🔴 Stopped</span>
+                      {% endif %}
+                    </p>
+
+                    <div class="mt-3 space-y-1">
+                      {% if c.State.Running %}
+                        <form method="post" action="/containers/{{ c.Id }}/stop">
+                          <button class="w-full text-left px-3 py-1 text-sm hover:bg-yellow-100 rounded-md">⏸ Stop</button>
+                        </form>
+                      {% else %}
+                        <form method="post" action="/containers/{{ c.Id }}/start">
+                          <button class="w-full text-left px-3 py-1 text-sm hover:bg-yellow-100 rounded-md">▶ Start</button>
+                        </form>
+                      {% endif %}
+                      <form method="post" action="/containers/{{ c.Id }}/delete">
+                        <button class="w-full text-left px-3 py-1 text-sm hover:bg-yellow-100 rounded-md">🗑 Delete</button>
+                      </form>
+                      <form method="get" action="/containers/{{ c.Id }}/logs">
+                        <button class="w-full text-left px-3 py-1 text-sm hover:bg-yellow-100 rounded-md">📜 Logs</button>
+                      </form>
+                      <form method="get" action="/containers/{{ c.Id }}/terminal">
+                        <button class="w-full text-left px-3 py-1 text-sm hover:bg-yellow-100 rounded-md">🖥 Terminal</button>
+                      </form>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-gray-500">No containers found for this group.</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-center text-gray-500 mt-12 text-lg">No Docker Compose groups found.</p>
+    {% endif %}
+  </div>
+
+   <!-- Spinner Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400 border-solid mb-6"></div>
+    <span id="loading-message" class="text-white text-lg font-semibold animate-pulse">Just a sec... 😊</span>
+  </div>
+    
+<script>
+  const loadingOverlay = document.getElementById("loading-overlay");
+  const loadingMsg = document.getElementById("loading-message");
+
+  const funnyMessages = [
+    "Waking up the containers...",
+    "Feeding the Docker daemon...",
+    "Pushing bytes through the tubes...",
+    "Assembling whales 🐳...",
+    "Downloading the Internet (almost)...",
+    "Negotiating with the GCR gods...",
+    "Compiling caffeine...",
+    "Whispering to Linux subsystems...",
+    "Placing pixels just right...",
+    "Summoning a smiley soon..."
+  ];
+
+  let intervalId;
+
+  // Show a random message every 1.6 seconds
+  function startFunnyMessages() {
+    intervalId = setInterval(() => {
+      const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+      loadingMsg.textContent = randomMsg;
+    }, 1600);
+  }
+
+  // End with a smiley
+  function showSmiley() {
+    clearInterval(intervalId);
+    loadingMsg.textContent = "Wait... 😀";
+  }
+
+  // Hook into all form submissions
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", () => {
+      loadingOverlay.classList.remove("hidden");
+      startFunnyMessages();
+      // Optional: end with smile after 6s if the page hasn’t redirected yet
+      setTimeout(showSmiley, 9000);
+    });
+  });
+</script>
+<script>
+  // Prevent spinner from staying visible after back/forward navigation
+  window.addEventListener("pageshow", function (event) {
+    // This ensures it runs even when bfcache is used
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("hidden");
+    }
+  });
+</script>
+  {% include "partials/footer.html" %}
+</body>
+</html>

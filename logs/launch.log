@@ -1,0 +1,4 @@
+time="2025-07-24T16:23:39-06:00" level=warning msg="C:\\Users\\HESHAM~2\\AppData\\Local\\Temp\\tmppotg9fod.yaml: `version` is obsolete"
+ saiku Pulling 
+ saiku Error pull access denied for saikureporting/saiku-server, repository does not exist or may require 'docker login': denied: requested access to the resource is denied
+Error response from daemon: pull access denied for saikureporting/saiku-server, repository does not exist or may require 'docker login': denied: requested access to the resource is denied

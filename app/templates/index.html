@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en"class="h-full" >
+<head>
+  <meta charset="UTF-8">
+  <title>Denodo Docker Images</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-white text-gray-900">
+  {% include "partials/navbar.html" %}
+
+  <main class="flex-grow px-6 py-10 w-full">
+    <h1 class="text-4xl font-extrabold text-gray-800 mb-10 text-center tracking-tight">🚀 Available Docker Image Tags</h1>
+
+    <!-- Top Tabs -->
+    <div class="flex justify-center mb-6 gap-6">
+      <button class="top-tab-button font-semibold text-indigo-600 border-b-4 border-indigo-600 px-5 py-2 rounded-t-md bg-white shadow" data-group="denodo_platform">Denodo Platform</button>
+      <button class="top-tab-button text-gray-600 hover:text-indigo-600 px-5 py-2 transition" data-group="solution_manager">Solution Manager</button>
+    </div>
+
+    <!-- Version Tabs -->
+    <div class="flex flex-wrap justify-center mb-8 gap-3" id="version-tabs">
+      {% for tab in ['denodo9','denodo8','denodo7','sm9','sm8','sm7','denodo_others','sm_others'] %}
+        <button class="version-tab-button text-sm sm:text-base px-4 py-2 rounded-md bg-white shadow hover:bg-indigo-100 transition hidden"
+                data-category="{{ tab }}"
+                data-group="{{ 'denodo_platform' if 'denodo' in tab else 'solution_manager' }}">
+          {{ tab|replace('_', ' ')|upper }}
+        </button>
+      {% endfor %}
+    </div>
+
+    <!-- Image Grid -->
+    <div id="image-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {% for image in denodo_images %}
+        {% set group = "denodo_platform" %}
+        {% if image.startswith("9") %}
+          {% set category = "denodo9" %}
+        {% elif image.startswith("8") %}
+          {% set category = "denodo8" %}
+        {% elif image.startswith("7") %}
+          {% set category = "denodo7" %}
+        {% else %}
+          {% set category = "denodo_others" %}
+        {% endif %}
+
+        <div class="image-card bg-white rounded-2xl shadow hover:shadow-xl p-6 flex flex-col justify-between transition duration-200" data-category="{{ category }}" data-group="{{ group }}">
+          <p class="text-xs text-gray-500 mb-2">gcr.io/denodo-container/denodo-platform:</p>
+          <h2 class="text-xl font-bold text-indigo-700 mb-4">{{ image }}</h2>
+          <a href="/launch?tag={{ image }}&group={{ group }}" class="mt-auto inline-block text-center w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">Launch Container</a>
+        </div>
+      {% endfor %}
+
+      {% for image in sm_images %}
+        {% set group = "solution_manager" %}
+        {% if image.startswith("9") or "sm9" in image %}
+          {% set category = "sm9" %}
+        {% elif image.startswith("8") or "sm8" in image %}
+          {% set category = "sm8" %}
+        {% elif image.startswith("7") or "sm7" in image %}
+          {% set category = "sm7" %}
+        {% else %}
+          {% set category = "sm_others" %}
+        {% endif %}
+
+        <div class="image-card bg-white rounded-2xl shadow hover:shadow-xl p-6 flex flex-col justify-between transition duration-200" data-category="{{ category }}" data-group="{{ group }}">
+          <p class="text-xs text-gray-500 mb-2">gcr.io/denodo-container/solution-manager:</p>
+          <h2 class="text-xl font-bold text-indigo-700 mb-4">{{ image }}</h2>
+          <a href="/launch?tag={{ image }}&group={{ group }}" class="mt-auto inline-block text-center w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">Launch Container</a>
+        </div>
+      {% endfor %}
+    </div>
+  </main>
+
+  <!-- Filter Script -->
+  <script>
+    const topButtons = document.querySelectorAll('.top-tab-button');
+    const versionButtons = document.querySelectorAll('.version-tab-button');
+    const cards = document.querySelectorAll('.image-card');
+
+    let selectedGroup = "denodo_platform";
+    let selectedCategory = "denodo9";
+
+    function filterCards(group, category) {
+      cards.forEach(card => {
+        const cardGroup = card.dataset.group;
+        const cardCategory = card.dataset.category;
+        card.classList.toggle("hidden", !(cardGroup === group && cardCategory === category));
+      });
+
+      topButtons.forEach(btn => {
+        btn.classList.remove("text-indigo-600", "border-b-4", "border-indigo-600", "bg-white", "shadow");
+      });
+      document.querySelector(`.top-tab-button[data-group='${group}']`)?.classList.add("text-indigo-600", "border-b-4", "border-indigo-600", "bg-white", "shadow");
+
+      versionButtons.forEach(btn => {
+        const matchGroup = btn.dataset.group === group;
+        btn.classList.toggle("hidden", !matchGroup);
+        btn.classList.remove("bg-indigo-100", "font-semibold");
+      });
+      const activeVersion = document.querySelector(`.version-tab-button[data-group='${group}'][data-category='${category}']`);
+      activeVersion?.classList.add("bg-indigo-100", "font-semibold");
+    }
+
+    topButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedGroup = btn.dataset.group;
+        selectedCategory = selectedGroup === "denodo_platform" ? "denodo9" : "sm9";
+        filterCards(selectedGroup, selectedCategory);
+      });
+    });
+
+    versionButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.group === selectedGroup) {
+          selectedCategory = btn.dataset.category;
+          filterCards(selectedGroup, selectedCategory);
+        }
+      });
+    });
+
+    filterCards(selectedGroup, selectedCategory);
+  </script>
+   <!-- Spinner Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400 border-solid mb-6"></div>
+    <span id="loading-message" class="text-white text-lg font-semibold animate-pulse">Just a sec... 😊</span>
+  </div>
+    
+<script>
+  const loadingOverlay = document.getElementById("loading-overlay");
+  const loadingMsg = document.getElementById("loading-message");
+
+  const funnyMessages = [
+    "Waking up the containers...",
+    "Feeding the Docker daemon...",
+    "Pushing bytes through the tubes...",
+    "Assembling whales 🐳...",
+    "Downloading the Internet (almost)...",
+    "Negotiating with the GCR gods...",
+    "Compiling caffeine...",
+    "Whispering to Linux subsystems...",
+    "Placing pixels just right...",
+    "Summoning a smiley soon..."
+  ];
+
+  let intervalId;
+
+  // Show a random message every 1.6 seconds
+  function startFunnyMessages() {
+    intervalId = setInterval(() => {
+      const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+      loadingMsg.textContent = randomMsg;
+    }, 1600);
+  }
+
+  // End with a smiley
+  function showSmiley() {
+    clearInterval(intervalId);
+    loadingMsg.textContent = "Wait... 😀";
+  }
+
+  // Hook into all form submissions
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", () => {
+      loadingOverlay.classList.remove("hidden");
+      startFunnyMessages();
+      // Optional: end with smile after 6s if the page hasn’t redirected yet
+      setTimeout(showSmiley, 9000);
+    });
+  });
+</script>
+<script>
+  // Prevent spinner from staying visible after back/forward navigation
+  window.addEventListener("pageshow", function (event) {
+    // This ensures it runs even when bfcache is used
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("hidden");
+    }
+  });
+</script>
+    {% include "partials/footer.html" %}
+</body>
+</html>

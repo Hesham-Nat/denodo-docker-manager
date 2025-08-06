@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <title>Available Databases</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-white text-gray-900">
+  {% include "partials/navbar.html" %}
+
+  <div class="flex-grow px-6 py-10 w-full">
+    <!-- 🧠 Page Title -->
+    <h1 class="text-4xl font-extrabold mb-8 text-gray-800">📚 Available Databases</h1>
+
+    {% if request.query_params.get('success') %}
+      <div class="mb-4 px-6 py-3 bg-green-100 text-green-800 border border-green-300 rounded-lg shadow-md">
+        ✅ {{ request.query_params.get('success') }}
+      </div>
+    {% elif request.query_params.get('error') %}
+      <div class="mb-4 px-6 py-3 bg-red-100 text-red-800 border border-red-300 rounded-lg shadow-md">
+        ❌ {{ request.query_params.get('error') }}
+      </div>
+    {% endif %}
+
+    {% if databases %}
+    <div class="overflow-x-auto rounded-lg shadow border border-gray-300 bg-white">
+      <table class="min-w-full divide-y divide-gray-300">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">#</th>
+            <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">Database</th>
+            <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">Host</th>
+            <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">Port</th>
+            <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">Status</th>
+            <th class="px-6 py-3 text-center text-sm font-bold text-gray-700">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white text-sm">
+          {% for db in databases %}
+          <tr>
+            <td class="px-6 py-4 text-gray-700">{{ db.track }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900">{{ db.name | capitalize }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ db.host }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ db.port }}</td>
+            <td class="px-6 py-4">
+              {% if db.status == 'running' %}
+              <span class="inline-flex items-center px-2 py-0.5 text-sm font-medium bg-green-100 text-green-800 rounded-full">
+                🟢 Running
+              </span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 text-sm font-medium bg-red-100 text-red-800 rounded-full">
+                🔴 Stopped
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div class="flex justify-center space-x-2">
+                {% if 'running' in db.status %}
+                <form method="post" action="/databases/{{ db.name }}/stop">
+                <button type="submit" class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">
+                    ⏸ Stop
+                </button>
+                </form>
+                {% else %}
+                <form method="post" action="/databases/{{ db.name }}/start">
+                <button type="submit" class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">
+                    ▶ Start
+                </button>
+                </form>
+                {% endif %}
+                <form method="get" action="/databases/{{ db.name }}/terminal">
+                <button class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">
+                    🖥️ Terminal
+                </button>
+                </form>
+                <form action="/databases/{{ db.name }}/logs" method="get">
+                <button class="text-left px-4 py-2 text-sm hover:bg-yellow-100 rounded-md border border-gray-200">
+                    📜 Logs
+                </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-center text-gray-500 text-lg mt-8">No database containers are currently running.</p>
+    {% endif %}
+  </div>
+   <!-- Spinner Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400 border-solid mb-6"></div>
+    <span id="loading-message" class="text-white text-lg font-semibold animate-pulse">Just a sec... 😊</span>
+  </div>
+    
+<script>
+  const loadingOverlay = document.getElementById("loading-overlay");
+  const loadingMsg = document.getElementById("loading-message");
+
+  const funnyMessages = [
+    "Waking up the containers...",
+    "Feeding the Docker daemon...",
+    "Pushing bytes through the tubes...",
+    "Assembling whales 🐳...",
+    "Downloading the Internet (almost)...",
+    "Negotiating with the GCR gods...",
+    "Compiling caffeine...",
+    "Whispering to Linux subsystems...",
+    "Placing pixels just right...",
+    "Summoning a smiley soon..."
+  ];
+
+  let intervalId;
+
+  // Show a random message every 1.6 seconds
+  function startFunnyMessages() {
+    intervalId = setInterval(() => {
+      const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+      loadingMsg.textContent = randomMsg;
+    }, 1600);
+  }
+
+  // End with a smiley
+  function showSmiley() {
+    clearInterval(intervalId);
+    loadingMsg.textContent = "Wait... 😀";
+  }
+
+  // Hook into all form submissions
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", () => {
+      loadingOverlay.classList.remove("hidden");
+      startFunnyMessages();
+      // Optional: end with smile after 6s if the page hasn’t redirected yet
+      setTimeout(showSmiley, 9000);
+    });
+  });
+</script>
+<script>
+  // Prevent spinner from staying visible after back/forward navigation
+  window.addEventListener("pageshow", function (event) {
+    // This ensures it runs even when bfcache is used
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("hidden");
+    }
+  });
+</script>
+    {% include "partials/footer.html" %}
+</body>
+</html>

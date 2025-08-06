@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+jinja2
+docker
+PyYAML
+python-multipart
+uvicorn[standard]
+python-dotenv
+httpx

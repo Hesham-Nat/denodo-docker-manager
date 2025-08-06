@@ -1,0 +1,6 @@
+version: '3'
+services:
+  saiku:
+    image: saikureporting/saiku-server
+    ports:
+      - 8080:8080

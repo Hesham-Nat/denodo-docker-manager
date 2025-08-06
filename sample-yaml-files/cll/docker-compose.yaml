@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  denodo-sm:
+    image: gcr.io/denodo-container/solution-manager:8.0.20230301-20230301
+    container_name: solutionmanager-cent
+    hostname: Natrophilite
+    ports:
+      - "10090:10090"
+      - "10091:10091"
+      - "19090:19090"
+    volumes:
+      - /mnt/c/Users/HeshamNatouf/Desktop/denodo_container_manager/mount/denodo8/license/DTUS-TL-DE-251226-047-SOL-EVAL.lic:/opt/denodo/conf/denodo.lic
+    command: --lmserver --smserver --smadmin
+    networks:
+      - denodo-network
+
+  denodo-test-env:
+    image: gcr.io/denodo-container/denodo-platform:8.0-20240926
+    container_name: denodo-test-env
+    hostname: Natrophilite
+    ports:
+      - "3999:3999"
+      - "3997:3997"
+      - "3996:3996"
+      - "3995:3995"
+      - "3090:3090"
+    environment:
+      - DENODO_LM_PROTO=http
+      - DENODO_LM_HOST=denodo-sm
+      - DENODO_LM_PORT=10091
+      - DENODO_SM_PROTO=http
+      - DENODO_SM_HOST=denodo-sm
+      - DENODO_SM_PORT=10090
+      - DENODO_SSO_HOST=denodo-sm
+      - DENODO_SSO_PORT=19090
+
+      - DENODO_PORT=3999
+      - DENODO_SHUTDOWN_PORT=3998
+      - DENODO_ODBC_PORT=3996
+      - DENODO_REGISTRY_PORT=3997
+      - DENODO_FACTORY_PORT=3995
+      - DENODO_REGISTRY_HOST=Natrophilite
+
+      - DENODO_WEBCONTAINER_HTTP_PORT=3090
+      - DENODO_WEBCONTAINER_SHUTDOWN_PORT=3099
+      - DENODO_WEBCONTAINER_JMX_PORT=3098
+      - DENODO_WEBCONTAINER_RMI_PORT=3097
+
+    command: --vdpserver --designstudio
+    networks:
+      - denodo-network
+
+networks:
+  denodo-network:
+    driver: bridge

@@ -1,0 +1,212 @@
+mysql:
+  name: denodo-db-mysql
+  image: mysql:8
+  ports:
+    "3306/tcp": 3306
+  env:
+    MYSQL_ROOT_PASSWORD: denodo
+    MYSQL_DATABASE: denodo
+    MYSQL_USER: denodo
+    MYSQL_PASSWORD: denodo
+  autostart: true
+
+postgres:
+  name: denodo-db-postgres
+  image: postgres:15
+  ports:
+    "5432/tcp": 5432
+  env:
+    POSTGRES_DB: denodo
+    POSTGRES_USER: denodo
+    POSTGRES_PASSWORD: denodo
+  autostart: true
+
+sqlserver:
+  name: denodo-db-sqlserver
+  image: mcr.microsoft.com/mssql/server:2019-latest
+  ports:
+    "1433/tcp": 1433
+  env:
+    ACCEPT_EULA: "Y"
+    SA_PASSWORD: Denodo123!
+  autostart: true
+
+mariadb:
+  name: denodo-db-mariadb
+  image: mariadb:11
+  ports:
+    "3307/tcp": 3306
+  env:
+    MYSQL_ROOT_PASSWORD: denodo
+    MYSQL_DATABASE: denodo
+    MYSQL_USER: denodo
+    MYSQL_PASSWORD: denodo
+  autostart: false
+
+oracle:
+  name: denodo-db-oracle
+  image: gvenzl/oracle-xe
+  ports:
+    "1521/tcp": 1521
+  env:
+    ORACLE_PASSWORD: denodo
+  autostart: false
+
+db2:
+  name: denodo-db-db2
+  image: ibmcom/db2
+  ports:
+    "50000/tcp": 50000
+  env:
+    DB2INST1_PASSWORD: denodo
+    LICENSE: accept
+  autostart: false
+
+cockroach:
+  name: denodo-db-cockroach
+  image: cockroachdb/cockroach:v23.1.11
+  ports:
+    "26257/tcp": 26257
+    "8080/tcp": 8080
+  command: start-single-node --insecure
+  autostart: false
+
+yugabyte:
+  name: denodo-db-yugabyte
+  image: yugabytedb/yugabyte:2.19.2.0-b89
+  ports:
+    "5433/tcp": 5433
+    "9042/tcp": 9042
+    "7000/tcp": 7000
+    "9000/tcp": 9000
+  command: bin/yugabyted start --daemon=false
+  autostart: false
+
+tidb:
+  name: denodo-db-tidb
+  image: pingcap/tidb:v7.5.0
+  ports:
+    "4000/tcp": 4000
+  autostart: false
+
+mongodb:
+  name: denodo-db-mongo
+  image: mongo:7
+  ports:
+    "27017/tcp": 27017
+  autostart: false
+
+redis:
+  name: denodo-db-redis
+  image: redis:7
+  ports:
+    "6379/tcp": 6379
+  autostart: false
+
+couchdb:
+  name: denodo-db-couchdb
+  image: couchdb:3
+  ports:
+    "5984/tcp": 5984
+  env:
+    COUCHDB_USER: admin
+    COUCHDB_PASSWORD: denodo
+  autostart: false
+
+cassandra:
+  name: denodo-db-cassandra
+  image: cassandra:4
+  ports:
+    "9042/tcp": 9042
+  autostart: false
+
+arangodb:
+  name: denodo-db-arangodb
+  image: arangodb:3.11
+  ports:
+    "8529/tcp": 8529
+  env:
+    ARANGO_ROOT_PASSWORD: denodo
+  autostart: false
+
+clickhouse:
+  name: denodo-db-clickhouse
+  image: clickhouse/clickhouse-server
+  ports:
+    "8123/tcp": 8123
+    "9000/tcp": 9000
+  autostart: false
+
+trino:
+  name: denodo-db-trino
+  image: trinodb/trino
+  ports:
+    "18080/tcp": 8080
+  autostart: false
+
+elasticsearch:
+  name: denodo-db-elasticsearch
+  image: elasticsearch:8.13.0
+  ports:
+    "19200/tcp": 9200
+    "19300/tcp": 9300
+  env:
+    discovery.type: single-node
+    xpack.security.enabled: "false"
+  autostart: false
+
+opensearch:
+  name: denodo-db-opensearch
+  image: opensearchproject/opensearch:2.13.0
+  ports:
+    "9200/tcp": 9200
+    "9600/tcp": 9600
+  env:
+    discovery.type: single-node
+    plugins.security.disabled: "true"
+  autostart: false
+
+solr:
+  name: denodo-db-solr
+  image: solr:9
+  ports:
+    "8983/tcp": 8983
+  autostart: false
+
+influxdb:
+  name: denodo-db-influxdb
+  image: influxdb:2.7
+  ports:
+    "8086/tcp": 8086
+  env:
+    DOCKER_INFLUXDB_INIT_MODE: setup
+    DOCKER_INFLUXDB_INIT_USERNAME: denodo
+    DOCKER_INFLUXDB_INIT_PASSWORD: denodo
+    DOCKER_INFLUXDB_INIT_ORG: denodo
+    DOCKER_INFLUXDB_INIT_BUCKET: metrics
+  autostart: false
+
+questdb:
+  name: denodo-db-questdb
+  image: questdb/questdb:7.3
+  ports:
+    "9000/tcp": 9000
+    "8812/tcp": 8812
+  autostart: false
+
+qdrant:
+  name: denodo-db-qdrant
+  image: qdrant/qdrant:latest
+  ports:
+    "6333/tcp": 6333
+  autostart: false
+
+neo4j:
+  name: denodo-db-neo4j
+  image: neo4j:5
+  ports:
+    "7474/tcp": 7474
+    "7687/tcp": 7687
+  env:
+    NEO4J_AUTH: "neo4j/denodo"
+  autostart: false

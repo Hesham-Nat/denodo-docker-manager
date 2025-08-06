@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <title>Container Logs - Denodo Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-white text-gray-900">
+  {% include "partials/navbar.html" %}
+
+  <div class="flex-grow px-6 py-10 w-full">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+      <h1 class="text-3xl font-bold text-gray-800">
+        🐳 Logs for: <span class="text-blue-600">{{ container_name }}</span>
+      </h1>
+
+      <div class="flex flex-wrap gap-2 text-sm">
+        {% if not full_logs %}
+          <a href="/containers/{{ container_id }}/logs?full=true"
+             class="px-4 py-2 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition">
+            📜 View Full Logs
+          </a>
+        {% else %}
+          <a href="/containers/{{ container_id }}/logs"
+             class="px-4 py-2 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition">
+            🧾 View Short Logs
+          </a>
+        {% endif %}
+
+        <a href="/containers/{{ container_id }}/logs/download"
+           class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+          ⬇️ Download Logs
+        </a>
+
+        <button id="toggle-refresh"
+                class="px-4 py-2 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 transition">
+          ⏸️ Pause Auto-Refresh
+        </button>
+
+        <a href="/containers"
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+          🔙 Back
+        </a>
+      </div>
+    </div>
+
+    <!-- Log Viewer -->
+    <div id="container-log-box"
+         class="bg-[#1e1e1e] text-green-400 font-mono text-sm leading-relaxed p-5 rounded-xl border border-gray-700 shadow-inner overflow-auto whitespace-pre-wrap"
+         style="min-height: 300px; max-height: 70vh;">
+      {{ logs | safe }}
+    </div>
+  </div>
+
+  <!-- Auto Refresh Script -->
+  <script>
+    const logBox = document.getElementById('container-log-box');
+    const toggleBtn = document.getElementById('toggle-refresh');
+    let refreshEnabled = true;
+
+    toggleBtn.addEventListener('click', () => {
+      refreshEnabled = !refreshEnabled;
+      toggleBtn.textContent = refreshEnabled ? '⏸️ Pause Auto-Refresh' : '▶️ Resume Auto-Refresh';
+    });
+
+    async function fetchLogs() {
+      if (!refreshEnabled) return;
+      try {
+        const response = await fetch(`/containers/{{ container_id }}/logs/raw`);
+        const data = await response.text();
+
+        const shouldScroll = logBox.scrollTop + logBox.clientHeight >= logBox.scrollHeight - 20;
+        logBox.textContent = data;
+
+        if (shouldScroll) {
+          logBox.scrollTop = logBox.scrollHeight;
+        }
+      } catch {
+        logBox.textContent += "\n⚠️ Error fetching logs...";
+      }
+    }
+
+    setInterval(fetchLogs, 3000);
+  </script>
+  <script>
+  // Prevent spinner from staying visible after back/forward navigation
+  window.addEventListener("pageshow", function (event) {
+    // This ensures it runs even when bfcache is used
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("hidden");
+    }
+  });
+</script>
+  {% include "partials/footer.html" %}
+</body>
+</html>

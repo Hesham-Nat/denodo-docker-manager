@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <title>Terminal - {{ container_name }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    #terminal-container {
+      min-height: 500px;
+      height: 70vh;
+      background-color: #1e1e1e;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-white text-gray-900">
+  {% include "partials/navbar.html" %}
+
+  <div class="flex-grow px-6 py-10 w-full">
+    <!-- Header -->
+    <div class="flex justify-between items-center flex-wrap gap-4">
+      <h1 class="text-3xl font-bold text-gray-800">
+        🖥️ Terminal for: <span class="text-blue-600">{{ container_name }}</span>
+      </h1>
+      <a href="/containers"
+         class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+        ← Back to Containers
+      </a>
+    </div>
+
+    <!-- Copy Section -->
+    <div class="bg-white rounded-xl shadow-lg border p-6 space-y-4">
+      <h2 class="text-xl font-semibold text-gray-800">📁 Copy inside container</h2>
+      <div class="flex flex-col md:flex-row gap-4">
+        <input
+          id="copy-source"
+          type="text"
+          placeholder="Source path inside container"
+          class="flex-1 px-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          id="copy-target"
+          type="text"
+          placeholder="Target path inside container"
+          class="flex-1 px-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          id="copy-btn"
+          class="px-5 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
+        >
+          📤 Copy
+        </button>
+      </div>
+      <div id="copy-message" class="text-sm font-medium"></div>
+    </div>
+
+    <!-- Terminal Area -->
+    <div class="rounded-xl border border-gray-700 shadow-inner overflow-hidden">
+      <div id="terminal-container" class="resize overflow-auto rounded-lg"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+  <script>
+    const containerId = "{{ container_id }}";
+
+    // Setup xterm
+    const term = new Terminal({
+      cursorBlink: true,
+      theme: {
+        background: '#1e1e1e',
+        foreground: '#00ff00',
+        selection: 'rgba(0, 255, 0, 0.3)'
+      },
+      fontSize: 14,
+      fontFamily: 'monospace'
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal-container'));
+    fitAddon.fit();
+
+    // WebSocket connection
+    const socket = new WebSocket(`ws://${location.host}/ws/terminal/${containerId}`);
+
+    socket.onopen = () => {
+      term.write("\r\n\x1b[32mConnected to container terminal...\x1b[0m\r\n");
+      term.focus();
+    };
+
+    socket.onmessage = event => {
+      term.write(event.data);
+      fitAddon.fit();
+    };
+
+    socket.onclose = () => {
+      term.write("\r\n\x1b[31m[Disconnected]\x1b[0m");
+    };
+
+    socket.onerror = () => {
+      term.write("\r\n\x1b[31m[Connection error]\x1b[0m");
+    };
+
+    term.onData(data => {
+      socket.send(data);
+    });
+
+    term.attachCustomKeyEventHandler(e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        term.write('^C\r\n');
+        socket.send('\x03');
+        return false;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+        term.clear();
+        return false;
+      }
+      return true;
+    });
+
+    window.addEventListener('resize', () => fitAddon.fit());
+
+    // Copy handling
+    const copyBtn = document.getElementById('copy-btn');
+    const sourceInput = document.getElementById('copy-source');
+    const targetInput = document.getElementById('copy-target');
+    const msgDiv = document.getElementById('copy-message');
+
+    copyBtn.addEventListener('click', async () => {
+      const source = sourceInput.value.trim();
+      const target = targetInput.value.trim();
+
+      if (!source || !target) {
+        msgDiv.textContent = "⚠️ Please fill in both fields.";
+        msgDiv.style.color = "red";
+        return;
+      }
+
+      msgDiv.textContent = "⏳ Copying...";
+      msgDiv.style.color = "black";
+
+      try {
+        const response = await fetch(`/containers/${containerId}/copy`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source_path: source, target_path: target })
+        });
+
+        const result = await response.json();
+
+        msgDiv.textContent = result.message || (result.success ? "✅ Copy succeeded." : "❌ Copy failed.");
+        msgDiv.style.color = result.success ? "green" : "red";
+      } catch (err) {
+        msgDiv.textContent = `❌ Error: ${err.message}`;
+        msgDiv.style.color = "red";
+      }
+    });
+  </script>
+   <!-- Spinner Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400 border-solid mb-6"></div>
+    <span id="loading-message" class="text-white text-lg font-semibold animate-pulse">Just a sec... 😊</span>
+  </div>
+    
+<script>
+  const loadingOverlay = document.getElementById("loading-overlay");
+  const loadingMsg = document.getElementById("loading-message");
+
+  const funnyMessages = [
+    "Waking up the containers...",
+    "Feeding the Docker daemon...",
+    "Pushing bytes through the tubes...",
+    "Assembling whales 🐳...",
+    "Downloading the Internet (almost)...",
+    "Negotiating with the GCR gods...",
+    "Compiling caffeine...",
+    "Whispering to Linux subsystems...",
+    "Placing pixels just right...",
+    "Summoning a smiley soon..."
+  ];
+
+  let intervalId;
+
+  // Show a random message every 1.6 seconds
+  function startFunnyMessages() {
+    intervalId = setInterval(() => {
+      const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+      loadingMsg.textContent = randomMsg;
+    }, 1600);
+  }
+
+  // End with a smiley
+  function showSmiley() {
+    clearInterval(intervalId);
+    loadingMsg.textContent = "Wait... 😀";
+  }
+
+  // Hook into all form submissions
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", () => {
+      loadingOverlay.classList.remove("hidden");
+      startFunnyMessages();
+      // Optional: end with smile after 6s if the page hasn’t redirected yet
+      setTimeout(showSmiley, 9000);
+    });
+  });
+</script>
+<script>
+  // Prevent spinner from staying visible after back/forward navigation
+  window.addEventListener("pageshow", function (event) {
+    // This ensures it runs even when bfcache is used
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("hidden");
+    }
+  });
+</script>
+    {% include "partials/footer.html" %}
+</body>
+</html>

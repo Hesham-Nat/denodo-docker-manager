@@ -1,0 +1,25 @@
+# Ignore virtual environment
+venv/
+!venv/.gitkeep
+
+# Ignore everything in volumes/denodo_shared, but keep the folder
+volumes/denodo_shared/*
+!volumes/denodo_shared/.gitkeep
+
+# Ignore all configs, but keep folder structure
+denodo-container-configuration/*
+!denodo-container-configuration/.gitkeep
+
+# Ignore compose group files, but keep folder
+docker-compose-groups/*
+!docker-compose-groups/.gitkeep
+
+# Ignore license files, but keep the mount structure
+mount/denodo9/license/*
+!mount/denodo9/license/.gitkeep
+mount/denodo8/license/*
+!mount/denodo8/license/.gitkeep
+
+# Ignore data directory contents
+data/*
+!data/.gitkeep
